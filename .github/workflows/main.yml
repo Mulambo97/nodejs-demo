@@ -79,5 +79,3 @@ jobs:
             echo "runing the docker image"
             echo "Testing the nodejs  app endpoints"
             echo ${{ steps.docker_build.outputs.digest }}
-=======
->>>>>>> 34aeea018455184dc7de204b12cfab8a6d0ea9bf
