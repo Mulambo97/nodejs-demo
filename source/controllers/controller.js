@@ -1,10 +1,17 @@
 import path from 'path';
+import insertPeopleInDB from '../models/models.js'
+
 const __dirname = path.resolve();
 
 export const home = (req, res) =>{
     //show this file '/' is requested
     const filePath = path.join(__dirname, "source/pages/home.html");
     res.sendFile(filePath);
+}
+
+// POST API to insert people info into the Mongo DB
+export const insertPeopleToDB =(req, res,firstName, lastName, jobTile, numberOfyearExperience, linkedinProfileUrl) =>{
+    insertPeopleInDB(firstName, lastName, jobTile, numberOfyearExperience. linkedinProfileUrl)
 }
 
 // get and show today's date
@@ -49,20 +56,20 @@ export const getPeople = (req, res) =>{
             LinkedIn: 'https://www.linkedin.com/in/yannmjl/'
         },
         {
-            FirstName: 'Bernard',
-            LastName: 'Ng',
+            FirstName: 'Odon',
+            LastName: 'Mulambo',
             title: 'Software Engineer',
             LinkedIn: 'https://www.linkedin.com/in/bernard-ngandu/'
         },
         {
-            FirstName: 'Clerc',
-            LastName: 'Kapema',
+            FirstName: 'Michael',
+            LastName: 'Neis',
             title: 'Web Developer',
             LinkedIn: 'https://www.linkedin.com/in/clerc-ngonga-b1253b174/'
         },
         {
-            FirstName: 'Gloire',
-            LastName: 'Kafwalubi',
+            FirstName: 'David',
+            LastName: 'Braun',
             title: 'Web Developer',
             LinkedIn: 'https://www.linkedin.com/in/gloire-kafwalubi-3152871a0/'
         }
