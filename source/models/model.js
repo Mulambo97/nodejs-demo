@@ -5,6 +5,7 @@
 
 import dotenv from 'dotenv';
 import { MongoClient, ServerApiVersion } from 'mongodb';
+import { ObjectId } from 'mongodb';
 dotenv.config()
 
 
@@ -26,10 +27,7 @@ const client = new MongoClient(uri, {
     }
   });
   
-  async function insertPeopleInDB(firstname, lastName, numberOfyearExperience, jobTile, linkedinProfileUrl) {
-
-    // validate user inputs
-    console.log(firstname, lastName, numberOfyearExperience, jobTile, linkedinProfileUrl);
+  const insertPeopleInDB = async (people) => {
 
     try {
       // Connect the client to the server	(optional starting in v4.7)
@@ -50,16 +48,6 @@ const client = new MongoClient(uri, {
       const database = client.db(dbName);
       const collection = database.collection(collectionName);
 
-      //define people paramters info to be insert to the DB
-      const people = [
-            {
-                FirstName: firstname,
-                LastName: lastName,
-                Title: jobTile,
-                LinkedIn: linkedinProfileUrl
-            }
-      ];
-
       try {
         const insertManyPeople = await collection.insertMany(people);
         console.log(`${insertManyPeople.insertedCount} documents successfully inserted.\n`);
@@ -72,8 +60,60 @@ const client = new MongoClient(uri, {
         await client.close();
       }
   
+  };
+
+  const getPeopleFromDB = async () => {
+    try {
+        await client.connect();
+        const database = client.db("nodejsdemo");
+        const collection = database.collection("people");
+        const people = await collection.find({}).toArray();
+        return people;
+    } finally {
+        await client.close();
+    }
+};
+
+const deletePersonById = async (id) => {
+  try {
+      await client.connect();
+      console.log("Connected to MongoDB!");
+
+      const database = client.db("nodejsdemo");
+      const collection = database.collection("people");
+      const result = await collection.deleteOne({ _id: new ObjectId(id) });
+
+      if (result.deletedCount === 1) {
+          console.log(`Successfully deleted person with ID ${id}`);
+      } else {
+          console.log(`No person found with ID ${id}`);
+      }
+  } catch (err) {
+      console.error(`Error deleting person: ${err}`);
+  } finally {
+      await client.close();
   }
-  insertPeopleInDB().catch(console.dir);
+};
 
+const updatePersonById = async (id, updateData) => {
+    try {
+        await client.connect();
+        console.log("Connected to MongoDB!");
 
-export default insertPeopleInDB;
+        const database = client.db("nodejsdemo");
+        const collection = database.collection("people");
+        const result = await collection.updateOne({ _id: new ObjectId(id) }, { $set: updateData });
+        
+        if (result.matchedCount === 1) {
+            console.log(`Successfully updated person with ID ${id}`);
+        } else {
+            console.log(`No person found with ID ${id}`);
+        }
+    } catch (err) {
+        console.error(`Error updating person: ${err}`);
+    } finally {
+        await client.close();
+    }
+};
+
+export { insertPeopleInDB, getPeopleFromDB, deletePersonById, updatePersonById };

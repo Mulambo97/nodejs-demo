@@ -2,6 +2,7 @@ import express from 'express';
 import routes from './source/routes/route.js';
 import dotenv from 'dotenv';
 import { MongoClient, ServerApiVersion } from 'mongodb';
+import { insertPeopleInDB, deletePersonById, updatePersonById } from './source/models/model.js';
 
 dotenv.config();
 // variable
@@ -17,6 +18,7 @@ app.use(express.urlencoded({extended: true}));
 // Application routes
 // connect our application to Express app
 
+/** 
 const user = process.env.USER;
 const password = process.env.PASSWORD;
 const cluster_uri = process.env.CLUSTER_URI;
@@ -34,7 +36,7 @@ const client = new MongoClient(uri, {
       deprecationErrors: true,
     }
   });
-
+**/
   /*** 
   // opening connection to db
   async function openDbConnection (){
@@ -60,69 +62,81 @@ const client = new MongoClient(uri, {
   } closeDbConnection().catch(console.dir);
 ***/
 
-  async function run() {
-    try {
-      // Connect the client to the server	(optional starting in v4.7)
-      await client.connect();
-      // Send a ping to confirm a successful connection
-      await client.db("admin").command({ ping: 1 });
-      console.log("Pinged your deployment. You successfully connected to MongoDB!");
-      // Creating people collection
-
-    // Provide the name of the database and collection you want to use.
-    // If the database and/or collection do not exist, the driver and Atlas
-    // will create them automatically when you first write data.
-    const dbName = "nodejsdemo";
-    const collectionName = "people";
-
-    // Create references to the database and collection in order to run
-    // operations on them.
-    const database = client.db(dbName);
-    const collection = database.collection(collectionName);
-
-    // A list of people
-    const people = [
-          {
-              FirstName: "Yann",
-              LastName: "Mulonda",
-              Title: "Software Engineer",
-              LinkedIn: "https://www.linkedin.com/in/yannmjl/"
-          },
-          {
-              FirstName: "Odon",
-              LastName: "Mulambo",
-              Title: "Software Engineer",
-              LinkedIn: "https://www.linkedin.com/in/bernard-ngandu/"
-          },
-          {
-              FirstName: "Michael",
-              LastName: "Neis",
-              Title: "Web Developer",
-              LinkedIn: "https://www.linkedin.com/in/clerc-ngonga-b1253b174/"
-          },
-          {
-              FirstName: "David",
-              LastName: "Braun",
-              Title: "Web Developer",
-              LinkedIn: "https://www.linkedin.com/in/gloire-kafwalubi-3152871a0/"
-          }
-    ];
-
-    try {
-      const insertManyPeople = await collection.insertMany(people);
-      console.log(`${insertManyPeople.insertedCount} documents successfully inserted.\n`);
-
-    }catch (err) {
-      console.error(`Something went wrong trying to insert the new documents: ${err}\n`);
-    }
-    } finally {
-      // Ensures that the client will close when you finish/error
-      await client.close();
-    }
-  
+// Predefined list of people to insert
+const predefinedPeople = [
+  {
+      "firstName": "Yann",
+      "lastName": "Mulonda",
+      "jobTitle": "Software Engineer",
+      "numberOfYearExperience": 5,
+      "linkedinProfileUrl": "https://www.linkedin.com/in/yannmjl/"
+  },
+  {
+      "firstName": "Odon",
+      "lastName": "Mulambo",
+      "jobTitle": "Software Engineer",
+      "numberOfYearExperience": 4,
+      "linkedinProfileUrl": "https://www.linkedin.com/in/bernard-ngandu/"
+  },
+  {
+      "firstName": "Michael",
+      "lastName": "Neis",
+      "jobTitle": "Web Developer",
+      "numberOfYearExperience": 3,
+      "linkedinProfileUrl": "https://www.linkedin.com/in/clerc-ngonga-b1253b174/"
+  },
+  {
+      "firstName": "David",
+      "lastName": "Braun",
+      "jobTitle": "Web Developer",
+      "numberOfYearExperience": 2,
+      "linkedinProfileUrl": "https://www.linkedin.com/in/gloire-kafwalubi-3152871a0/"
   }
-  run().catch(console.dir);
+];
 
+// Predefined list of people to delete by ID
+const predefinedDeleteIds = [
+  "6643867c68bfac6bddabeb62", 
+];
+
+// Predefined list of updates (ID and update data)
+const predefinedUpdates = [
+  {
+      id: "6643867c68bfac6bddabeb63", // Example ObjectId, replace with actual ID
+      updateData: { jobTitle: 'Senior Web Developer' }
+  },
+];
+
+// Insert predefined people on server start
+(async () => {
+  /**try {
+      console.log("Inserting predefined people");
+      await insertPeopleInDB(predefinedPeople);
+      console.log("Predefined people inserted successfully.");
+  } catch (error) {
+      console.error(error);
+  }*/
+
+  // Delete predefined people by ID on server start
+  for (const id of predefinedDeleteIds) {
+    try {
+        console.log(`Deleting person with ID: ${id}`);
+        await deletePersonById(id);
+    } catch (error) {
+        console.error(`Error deleting person with ID ${id}:`, error);
+        }
+  }
+
+  // Update predefined people by ID on server start
+  for (const { id, updateData } of predefinedUpdates) {
+      try {
+          console.log(`Updating person with ID: ${id}`);
+          await updatePersonById(id, updateData);
+      } catch (error) {
+          console.error(`Error updating person with ID ${id}:`, error);
+      }
+  }
+})();
 
 //
 routes(app);

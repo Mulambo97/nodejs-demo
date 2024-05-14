@@ -1,34 +1,77 @@
 import path from 'path';
-import insertPeopleInDB from '../models/models.js'
+import { insertPeopleInDB, getPeopleFromDB } from '../models/model.js';
 
 const __dirname = path.resolve();
 
-export const home = (req, res) =>{
-    //show this file '/' is requested
+export const home = (req, res) => {
+    // Show this file when '/' is requested
     const filePath = path.join(__dirname, "source/pages/home.html");
     res.sendFile(filePath);
-}
+};
 
-// POST API to insert people info into the Mongo DB
-export const insertPeopleToDB =(req, res,firstName, lastName, jobTile, numberOfyearExperience, linkedinProfileUrl) =>{
-    insertPeopleInDB(firstName, lastName, jobTile, numberOfyearExperience. linkedinProfileUrl)
-}
+// POST API to insert people info into the MongoDB
+export const insertPeopleToDB = async (req, res) => {
+    const people = req.body;
+    console.log('Inserting people:', people);
+    try {
+        await insertPeopleInDB(people);
+        console.log('Data inserted successfully');
+    } catch (error) {
+        console.error('Error inserting data:', error);
+    }
+};
 
-// get and show today's date
-export const getTodayDate =(req, res) =>{
-    var dateObj = new Date();
-    var month = dateObj.getUTCMonth()+1; //months from 1-12
-    var day = dateObj.getUTCDate();
-    var year = dateObj.getUTCFullYear();
-    var newdate = day+ "/"+ month +"/"+ year;
-    res.json({
-        today:newdate
-    });
-}
+// GET API to retrieve people from the MongoDB
+export const getPeople = async (req, res) => {
+    try {
+        const people = await getPeopleFromDB();
+        console.log('Retrieved people:', people);
+        res.json(people);
+    } catch (error) {
+        console.error('Error retrieving data:', error);
+    }
+};
 
-// get list of month name 
 
-export const getMonthsName =(req, res) =>{
+// API to delete a person from the DB by ID
+export const deletePerson = async (req, res) => {
+    const { id } = req.params; // Get ID from request parameters
+    console.log('Deleting person with ID:', id);
+    try {
+        await deletePersonById(id);
+        res.status(200).send(`Person with ID ${id} deleted successfully`);
+    } catch (error) {
+        console.error('Error deleting person:', error);
+        res.status(500).send('Error deleting person');
+    }
+};
+
+// API to update a person in the DB by ID
+export const updatePerson = async (req, res) => {
+    const { id } = req.params; // Get ID from request parameters
+    const updateData = req.body; // Get update data from request body
+    console.log('Updating person with ID:', id, 'with data:', updateData);
+    try {
+        await updatePersonById(id, updateData);
+        res.status(200).send(`Person with ID ${id} updated successfully`);
+    } catch (error) {
+        console.error('Error updating person:', error);
+        res.status(500).send('Error updating person');
+    }
+};
+
+// Get and show today's date
+export const getTodayDate = (req, res) => {
+    const dateObj = new Date();
+    const month = dateObj.getUTCMonth() + 1; // months from 1-12
+    const day = dateObj.getUTCDate();
+    const year = dateObj.getUTCFullYear();
+    const newDate = `${day}/${month}/${year}`;
+    res.json({ today: newDate });
+};
+
+// Get list of month names
+export const getMonthsName = (req, res) => {
     res.json({
         1: 'January',
         2: 'February',
@@ -43,35 +86,4 @@ export const getMonthsName =(req, res) =>{
         11: 'November',
         12: 'December'
     });
-}
-
-// get list of people 
-
-export const getPeople = (req, res) =>{
-    res.json([
-        {
-            FirstName: 'Yann',
-            LastName: 'Mulonda',
-            title: 'Software Engineer',
-            LinkedIn: 'https://www.linkedin.com/in/yannmjl/'
-        },
-        {
-            FirstName: 'Odon',
-            LastName: 'Mulambo',
-            title: 'Software Engineer',
-            LinkedIn: 'https://www.linkedin.com/in/bernard-ngandu/'
-        },
-        {
-            FirstName: 'Michael',
-            LastName: 'Neis',
-            title: 'Web Developer',
-            LinkedIn: 'https://www.linkedin.com/in/clerc-ngonga-b1253b174/'
-        },
-        {
-            FirstName: 'David',
-            LastName: 'Braun',
-            title: 'Web Developer',
-            LinkedIn: 'https://www.linkedin.com/in/gloire-kafwalubi-3152871a0/'
-        }
-    ]);
-}
+};
