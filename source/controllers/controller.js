@@ -99,6 +99,7 @@ export const getPeopleFromDatabase = async (req, res) => {
         try {
             const peopleCursor = await collection.find();
             peopleResults = await peopleCursor.toArray();
+            console.log(peopleResults); // Log the results
         } catch (err) {
             console.error(`Something went wrong trying to fetch the documents: ${err}`);
         }
@@ -107,7 +108,6 @@ export const getPeopleFromDatabase = async (req, res) => {
     } finally {
         await client.close();
     }
-    console.log(peopleResults);
     return res.json(peopleResults);
 };
 
