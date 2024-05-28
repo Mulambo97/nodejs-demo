@@ -1,73 +1,39 @@
 import path from 'path';
-import { insertPeopleInDB, getPeopleFromDB } from '../models/model.js';
+import dotenv from 'dotenv';
+import { MongoClient, ServerApiVersion } from 'mongodb';
+
+dotenv.config();
+
+const user = process.env.USER;
+const password = process.env.PASSWORD;
+const cluster_uri = process.env.CLUSTER_URI;
+
+const url = `mongodb+srv://${user}:${password}@${cluster_uri}.rshysdh.mongodb.net/?retryWrites=true&w=majority&appName=nodejsdemo`;
+console.log(url);
+
+const client = new MongoClient(url, {
+    serverApi: {
+      version: ServerApiVersion.v1,
+      strict: true,
+      deprecationErrors: true,
+    }
+});
 
 const __dirname = path.resolve();
 
+// Show html page
 export const home = (req, res) => {
-    // Show this file when '/' is requested
-    const filePath = path.join(__dirname, "source/pages/home.html");
-    res.sendFile(filePath);
-};
-
-// POST API to insert people info into the MongoDB
-export const insertPeopleToDB = async (req, res) => {
-    const people = req.body;
-    console.log('Inserting people:', people);
-    try {
-        await insertPeopleInDB(people);
-        console.log('Data inserted successfully');
-    } catch (error) {
-        console.error('Error inserting data:', error);
-    }
-};
-
-// GET API to retrieve people from the MongoDB
-export const getPeople = async (req, res) => {
-    try {
-        const people = await getPeopleFromDB();
-        console.log('Retrieved people:', people);
-        res.json(people);
-    } catch (error) {
-        console.error('Error retrieving data:', error);
-    }
-};
-
-
-// API to delete a person from the DB by ID
-export const deletePerson = async (req, res) => {
-    const { id } = req.params; // Get ID from request parameters
-    console.log('Deleting person with ID:', id);
-    try {
-        await deletePersonById(id);
-        res.status(200).send(`Person with ID ${id} deleted successfully`);
-    } catch (error) {
-        console.error('Error deleting person:', error);
-        res.status(500).send('Error deleting person');
-    }
-};
-
-// API to update a person in the DB by ID
-export const updatePerson = async (req, res) => {
-    const { id } = req.params; // Get ID from request parameters
-    const updateData = req.body; // Get update data from request body
-    console.log('Updating person with ID:', id, 'with data:', updateData);
-    try {
-        await updatePersonById(id, updateData);
-        res.status(200).send(`Person with ID ${id} updated successfully`);
-    } catch (error) {
-        console.error('Error updating person:', error);
-        res.status(500).send('Error updating person');
-    }
+    res.sendFile(__dirname + "/source/pages/home.html");
 };
 
 // Get and show today's date
 export const getTodayDate = (req, res) => {
     const dateObj = new Date();
-    const month = dateObj.getUTCMonth() + 1; // months from 1-12
+    const month = dateObj.getUTCMonth() + 1;
     const day = dateObj.getUTCDate();
     const year = dateObj.getUTCFullYear();
-    const newDate = `${day}/${month}/${year}`;
-    res.json({ today: newDate });
+    const newdate = day + "/" + month + "/" + year;
+    res.json({ today: newdate });
 };
 
 // Get list of month names
@@ -86,4 +52,120 @@ export const getMonthsName = (req, res) => {
         11: 'November',
         12: 'December'
     });
+};
+
+// Get list of people
+export const getPeople = (req, res) => {
+    res.json([
+        {
+            FirstName: 'Yann',
+            LastName: 'Mulonda',
+            title: 'Software Engineer',
+            LinkedIn: 'https://www.linkedin.com/in/yannmjl/'
+        },
+        {
+            FirstName: 'Michael',
+            LastName: 'Neis',
+            title: 'Software Developer',
+            LinkedIn: 'https://www.linkedin.com/in/bernard-ngandu/'
+        },
+        {
+            FirstName: 'Odon',
+            LastName: 'Mulambo',
+            title: 'Software Developer',
+            LinkedIn: 'https://www.linkedin.com/in/clerc-ngonga-b1253b174/'
+        },
+        {
+            FirstName: 'David',
+            LastName: 'Braun',
+            title: 'Full Stack Developer',
+            LinkedIn: 'https://www.linkedin.com/in/gloire-kafwalubi-3152871a0/'
+        }
+    ]);
+};
+
+// Get list of people from the database
+export const getPeopleFromDatabase = async (req, res) => {
+    const dbName = "nodejsdemo";
+    const collectionName = "people";
+    let peopleResults;
+    try {
+        await client.connect();
+        await client.db("admin").command({ ping: 1 });
+        console.log("Connected successfully to server");
+
+        const database = client.db(dbName);
+        const collection = database.collection(collectionName);
+        try {
+            const peopleCursor = await collection.find();
+            peopleResults = await peopleCursor.toArray();
+        } catch (err) {
+            console.error(`Something went wrong trying to fetch the documents: ${err}`);
+        }
+    } catch (err) {
+        console.error(`Something went wrong connecting to the server: ${err}`);
+    } finally {
+        await client.close();
+    }
+    console.log(peopleResults);
+    return res.json(peopleResults);
+};
+
+export const createPerson = async (req, res) => {
+    const dbName = "nodejsdemo";
+    const collectionName = "people";
+    let addedPerson;
+    try {
+        await client.connect();
+        await client.db("admin").command({ ping: 1 });
+        console.log("Connected successfully to server");
+
+        const database = client.db(dbName);
+        const collection = database.collection(collectionName);
+        try {
+            const newPerson = {
+                FirstName: "Mitch",
+                LastName: "McKenzie",
+                Title: "Data Analyst"
+            };
+            const result = await collection.insertOne(newPerson);
+            console.log(`New listing created with the following id: ${result.insertedId}`);
+        } catch (err) {
+            console.error(`Something went wrong trying to insert the new document: ${err}`);
+        }
+    } catch (err) {
+        console.error(`Something went wrong connecting to the server: ${err}`);
+    } finally {
+        await client.close();
+    }
+    return res.json(addedPerson);
+};
+
+export const updatePerson = async (req, res) => {
+    const dbName = "nodejsdemo";
+    const collectionName = "people";
+    let updatedPerson;
+    try {
+        await client.connect();
+        await client.db("admin").command({ ping: 1 });
+        console.log("Connected successfully to server");
+
+        const database = client.db(dbName);
+        const collection = database.collection(collectionName);
+        try {
+            updatedPerson = await collection.updateOne(
+                { FirstName: "Michael" },
+                { $set: { Title: "Software Developer", Employed: false } }
+            );
+            console.log(`${updatedPerson.matchedCount} document(s) matched the query criteria.`);
+            console.log(`${updatedPerson.modifiedCount} document(s) updated.`);
+        } catch (err) {
+            console.error(`Something went wrong trying to update the document: ${err}`);
+        }
+    } catch (err) {
+        console.error(`Something went wrong connecting to the server: ${err}`);
+    } finally {
+        await client.close();
+    }
+    return res.json(updatedPerson);
 };

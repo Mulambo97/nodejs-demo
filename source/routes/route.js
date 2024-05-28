@@ -1,33 +1,30 @@
-
-import { home, getTodayDate, getMonthsName, getPeople, insertPeopleToDB, deletePerson, updatePerson } from "../controllers/controller.js";
-
-//set up routing
-
-const routes = (app)=>{
-
-    //home page 
-    app.route('/').get(home);
-
-    // get APi list of People from MongoDB
-
-    // Delete API list of people from MongoDB
-    app.route('/people/:id').delete(deletePerson); 
-
-    // Update API or Edit list of people from MongoDB
-    app.route('/people/:id').put(updatePerson); 
-
-    // POST API Add people to DB
-    app.route('/addPeople').post(insertPeopleToDB);
-
-    // API Get home page
-    app.route('/home').get(home);
-    // API Get today's date
-    app.route('/today').get(getTodayDate);
-    // API Get Months
-    app.route('/months').get(getMonthsName);
-    // API Get People
-    app.route('/people').get(getPeople);
-
+import { home, getPeople, getTodayDate, getMonthsName, getPeopleFromDatabase, createPerson, updatePerson } from '../controllers/controller.js';
+// set up the routing
+const routes = (app) => {
+    // home page
+    app.route('/')
+        .get(home)
+    // GET home page.
+    app.route('/home')
+        .get(home)
+    // Get today's date
+    app.route('/today')
+        .get(getTodayDate)
+    // get list of month names
+    app.route('/months')
+        .get(getMonthsName)
+    // get list of People
+    app.route('/people')
+        .get(getPeople)
+    // get people from DB
+    app.route('/peopleList')
+        .get(getPeopleFromDatabase)
+    // create a new person
+    app.route('/createPerson')
+        .get(createPerson)
+    // update a person
+    app.route('/updatePerson')
+        .get(updatePerson)
 }
-
+// export the route
 export default routes;
